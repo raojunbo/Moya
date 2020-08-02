@@ -1,5 +1,6 @@
 import Foundation
 
+//对url requst进行编码
 internal extension URLRequest {
 
     mutating func encoded(encodable: Encodable, encoder: JSONEncoder = JSONEncoder()) throws -> URLRequest {

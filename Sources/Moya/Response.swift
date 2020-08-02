@@ -4,15 +4,19 @@ import Foundation
 public final class Response: CustomDebugStringConvertible, Equatable {
 
     /// The status code of the response.
+    //http 的状态码
     public let statusCode: Int
 
     /// The response data.
+    //http的reponse data
     public let data: Data
 
     /// The original URLRequest for the response.
+    //原始的对应的requset
     public let request: URLRequest?
 
     /// The HTTPURLResponse object.
+    //原始的网络请求response
     public let response: HTTPURLResponse?
 
     public init(statusCode: Int, data: Data, request: URLRequest? = nil, response: HTTPURLResponse? = nil) {
@@ -86,6 +90,8 @@ public extension Response {
 
     /// Maps data received from the signal into an Image.
     func mapImage() throws -> Image {
+        //将response的data转换为Image
+        //也就是Moya提供的简答的将Respoose的data转换为iamge
         guard let image = Image(data: data) else {
             throw MoyaError.imageMapping(self)
         }
@@ -96,6 +102,8 @@ public extension Response {
     ///
     /// - parameter failsOnEmptyData: A Boolean value determining
     /// whether the mapping should fail if the data is empty.
+    //Moya提供的将response的转为json
+    //在swift里将Json是一个类
     func mapJSON(failsOnEmptyData: Bool = true) throws -> Any {
         do {
             return try JSONSerialization.jsonObject(with: data, options: .allowFragments)
@@ -110,6 +118,7 @@ public extension Response {
     /// Maps data received from the signal into a String.
     ///
     /// - parameter atKeyPath: Optional key path at which to parse string.
+    //先转为json对象.在强转nsdictionary。在转为String
     func mapString(atKeyPath keyPath: String? = nil) throws -> String {
         if let keyPath = keyPath {
             // Key path was provided, try to parse string at key path
@@ -131,6 +140,7 @@ public extension Response {
     ///
     /// - parameter atKeyPath: Optional key path at which to parse object.
     /// - parameter using: A `JSONDecoder` instance which is used to decode data to an object.
+    //将data 转为可解码的对象
     func map<D: Decodable>(_ type: D.Type, atKeyPath keyPath: String? = nil, using decoder: JSONDecoder = JSONDecoder(), failsOnEmptyData: Bool = true) throws -> D {
         let serializeToData: (Any) throws -> Data? = { (jsonObject) in
             guard JSONSerialization.isValidJSONObject(jsonObject) else {

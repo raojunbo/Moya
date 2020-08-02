@@ -15,6 +15,7 @@ private func JSONResponseDataFormatter(_ data: Data) -> String {
     }
 }
 
+//创建一个MoyaProvider
 let gitHubProvider = MoyaProvider<GitHub>(plugins: [NetworkLoggerPlugin(configuration: .init(formatter: .init(responseData: JSONResponseDataFormatter),
                                                                                              logOptions: .verbose))])
 
@@ -32,6 +33,7 @@ public enum GitHub {
     case userRepositories(String)
 }
 
+//GitHub
 extension GitHub: TargetType {
     public var baseURL: URL { return URL(string: "https://api.github.com")! }
     public var path: String {

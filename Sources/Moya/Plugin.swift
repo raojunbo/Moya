@@ -6,6 +6,8 @@ import Foundation
 ///     - log network requests
 ///     - hide and show a network activity indicator
 ///     - inject additional information into a request
+//定义协议的插件
+//这个插件。就是给在网络运行中给定切入点
 public protocol PluginType {
     /// Called to modify a request before sending.
     func prepare(_ request: URLRequest, target: TargetType) -> URLRequest
@@ -39,9 +41,11 @@ public protocol RequestType {
     var request: URLRequest? { get }
 
     ///  Additional headers appended to the request when added to the session.
+    //http 的头部
     var sessionHeaders: [String: String] { get }
 
     /// Authenticates the request with a username and password.
+    //http 的授权
     func authenticate(username: String, password: String, persistence: URLCredential.Persistence) -> Self
 
     /// Authenticates the request with an `NSURLCredential` instance.

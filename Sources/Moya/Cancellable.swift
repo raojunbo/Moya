@@ -1,4 +1,5 @@
 /// Protocol to define the opaque type returned from a request.
+//一个request可以取消的概念
 public protocol Cancellable {
 
     /// A Boolean value stating whether a request is cancelled.

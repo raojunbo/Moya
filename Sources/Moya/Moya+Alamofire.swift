@@ -1,11 +1,11 @@
 import Foundation
 import Alamofire
 
-public typealias Session = Alamofire.Session
-internal typealias Request = Alamofire.Request
-internal typealias DownloadRequest = Alamofire.DownloadRequest
-internal typealias UploadRequest = Alamofire.UploadRequest
-internal typealias DataRequest = Alamofire.DataRequest
+public typealias Session = Alamofire.Session //采用的是Alamofire的一个session
+internal typealias Request = Alamofire.Request//采用的是almofires的request
+internal typealias DownloadRequest = Alamofire.DownloadRequest//downlaodRequest
+internal typealias UploadRequest = Alamofire.UploadRequest//上传的request
+internal typealias DataRequest = Alamofire.DataRequest//data的request
 
 internal typealias URLRequestConvertible = Alamofire.URLRequestConvertible
 

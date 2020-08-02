@@ -1,7 +1,10 @@
 import Foundation
 
 /// These functions are default mappings to `MoyaProvider`'s properties: endpoints, requests, session etc.
+
+//
 public extension MoyaProvider {
+    // MoyaProvider的将Target转换成endpoint
     final class func defaultEndpointMapping(for target: Target) -> Endpoint {
         return Endpoint(
             url: URL(target: target).absoluteString,
@@ -11,7 +14,8 @@ public extension MoyaProvider {
             httpHeaderFields: target.headers
         )
     }
-
+    
+    //MoyaProvider将endPoint转换为request
     final class func defaultRequestMapping(for endpoint: Endpoint, closure: RequestResultClosure) {
         do {
             let urlRequest = try endpoint.urlRequest()
@@ -24,7 +28,7 @@ public extension MoyaProvider {
             closure(.failure(MoyaError.underlying(error, nil)))
         }
     }
-
+    //默认的session
     final class func defaultAlamofireSession() -> Session {
         let configuration = URLSessionConfiguration.default
         configuration.headers = .default

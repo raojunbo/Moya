@@ -42,6 +42,9 @@ public struct ProgressResponse {
 
 /// A protocol representing a minimal interface for a MoyaProvider.
 /// Used by the reactive provider extensions.
+//定义 MoyaProviderType协议
+//associatedtype 设置关联类型，也就是将其他名字改为协议要使用的名字；协议使用新的名字；
+//让协议继承AnyObject 是为了让object-c使用
 public protocol MoyaProviderType: AnyObject {
 
     associatedtype Target: TargetType
@@ -51,9 +54,12 @@ public protocol MoyaProviderType: AnyObject {
 }
 
 /// Request provider class. Requests should be made through this class only.
+//MoyaProvider 提供一个泛型，并且实现MoyaProviderType协议
+//
 open class MoyaProvider<Target: TargetType>: MoyaProviderType {
 
     /// Closure that defines the endpoints for the provider.
+    //入仓为taget 出参为endpoint
     public typealias EndpointClosure = (Target) -> Endpoint
 
     /// Closure that decides if and what request should be performed.
@@ -79,6 +85,7 @@ open class MoyaProvider<Target: TargetType>: MoyaProviderType {
 
     /// A list of plugins.
     /// e.g. for logging, network activity indicator or credentials.
+    //插件数组
     public let plugins: [PluginType]
 
     public let trackInflights: Bool
@@ -88,9 +95,12 @@ open class MoyaProvider<Target: TargetType>: MoyaProviderType {
     /// Propagated to Alamofire as callback queue. If nil - the Alamofire default (as of their API in 2017 - the main queue) will be used.
     let callbackQueue: DispatchQueue?
 
+    //创建一个递归锁；
     let lock: NSRecursiveLock = NSRecursiveLock()
 
     /// Initializes a provider.
+    //provider的初始化都给了默认的实现
+    //这些都是创建网络时的闭包
     public init(endpointClosure: @escaping EndpointClosure = MoyaProvider.defaultEndpointMapping,
                 requestClosure: @escaping RequestClosure = MoyaProvider.defaultRequestMapping,
                 stubClosure: @escaping StubClosure = MoyaProvider.neverStub,
@@ -114,12 +124,15 @@ open class MoyaProvider<Target: TargetType>: MoyaProviderType {
     }
 
     /// Designated request-making method. Returns a `Cancellable` token to cancel the request later.
+    //真正发起网络请求
+    //这个网络请求。设置progress的block；
+    //网络完成的block
     @discardableResult
     open func request(_ target: Target,
                       callbackQueue: DispatchQueue? = .none,
                       progress: ProgressBlock? = .none,
                       completion: @escaping Completion) -> Cancellable {
-
+        //如果外部没有奢姿。那么就用默认的
         let callbackQueue = callbackQueue ?? self.callbackQueue
         return requestNormal(target, callbackQueue: callbackQueue, progress: progress, completion: completion)
     }

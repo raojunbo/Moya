@@ -17,19 +17,30 @@ public extension Method {
 // MARK: - MoyaProvider
 
 /// Internal extension to keep the inner-workings outside the main Moya.swift file.
+//真正的网络发起实现
 public extension MoyaProvider {
     /// Performs normal requests.
     func requestNormal(_ target: Target, callbackQueue: DispatchQueue?, progress: Moya.ProgressBlock?, completion: @escaping Moya.Completion) -> Cancellable {
-        let endpoint = self.endpoint(target)
-        let stubBehavior = self.stubClosure(target)
-        let cancellableToken = CancellableWrapper()
+        let endpoint = self.endpoint(target)//通过endPointClosure，将target转换为endPoint；
+        let stubBehavior = self.stubClosure(target)//通过stubClosure，获取数据模拟的行为
+        let cancellableToken = CancellableWrapper()//创建cancellableToken
 
         // Allow plugins to modify response
+        // 定义插件完成的执行的闭包
         let pluginsWithCompletion: Moya.Completion = { result in
-            let processedResult = self.plugins.reduce(result) { $1.process($0, target: target) }
+            //这里用到了数据的reduce高介方法
+            //当所有的plugin相继执行。将上次的结果放入下次的输入；
+            //这里就是当Moya.completion执行完后。看插件是否完全正常执行完
+            //是一种函数式编程.
+            //reduce是将上次计算的结构当作下次迭代的的输入
+            let processedResult = self.plugins.reduce(result) {
+                $1.process($0, target: target)
+            }
             completion(processedResult)
         }
-
+        
+        // inflightCompletionBlocks 加锁
+        // 这里为什么加锁?
         if trackInflights {
             lock.lock()
             var inflightCompletionBlocks = self.inflightRequests[endpoint]
@@ -45,8 +56,11 @@ public extension MoyaProvider {
                 lock.unlock()
             }
         }
-
+        
+        //定义网络网络执行完后的的闭包。相当于定义一个block
+        //当真正执行网络时；这些会调用
         let performNetworking = { (requestResult: Result<URLRequest, MoyaError>) in
+            //在真正执行网络时。如果网络已经取消了
             if cancellableToken.isCancelled {
                 self.cancelCompletion(pluginsWithCompletion, target: target)
                 return
@@ -73,7 +87,7 @@ public extension MoyaProvider {
                 pluginsWithCompletion(result)
               }
             }
-
+            //真正执行网络请求
             cancellableToken.innerCancellable = self.performRequest(target, request: request, callbackQueue: callbackQueue, progress: progress, completion: networkCompletion, endpoint: endpoint, stubBehavior: stubBehavior)
         }
 
@@ -83,20 +97,27 @@ public extension MoyaProvider {
     }
 
     // swiftlint:disable:next function_parameter_count
+    //进入网络请求
     private func performRequest(_ target: Target, request: URLRequest, callbackQueue: DispatchQueue?, progress: Moya.ProgressBlock?, completion: @escaping Moya.Completion, endpoint: Endpoint, stubBehavior: Moya.StubBehavior) -> Cancellable {
         switch stubBehavior {
         case .never:
             switch endpoint.task {
             case .requestPlain, .requestData, .requestJSONEncodable, .requestCustomJSONEncodable, .requestParameters, .requestCompositeData, .requestCompositeParameters:
+                //真正的发起网络:普通请求，data,jsonEncode,customjsone,requstParams。
+                //对body数据格式的封装
                 return self.sendRequest(target, request: request, callbackQueue: callbackQueue, progress: progress, completion: completion)
             case .uploadFile(let file):
+                //上传文件,上传的是文件的data
                 return self.sendUploadFile(target, request: request, callbackQueue: callbackQueue, file: file, progress: progress, completion: completion)
             case .uploadMultipart(let multipartBody), .uploadCompositeMultipart(let multipartBody, _):
+                //上传表单
+                //body部分有多种形式
                 guard !multipartBody.isEmpty && endpoint.method.supportsMultipart else {
                     fatalError("\(target) is not a multipart upload target.")
                 }
                 return self.sendUploadMultipart(target, request: request, callbackQueue: callbackQueue, multipartBody: multipartBody, progress: progress, completion: completion)
             case .downloadDestination(let destination), .downloadParameters(_, _, let destination):
+                //下载
                 return self.sendDownloadRequest(target, request: request, callbackQueue: callbackQueue, destination: destination, progress: progress, completion: completion)
             }
         default:
@@ -182,8 +203,8 @@ private extension MoyaProvider {
     func sendUploadMultipart(_ target: Target, request: URLRequest, callbackQueue: DispatchQueue?, multipartBody: [MultipartFormData], progress: Moya.ProgressBlock? = nil, completion: @escaping Moya.Completion) -> CancellableToken {
         let formData = RequestMultipartFormData()
         formData.applyMoyaMultipartFormData(multipartBody)
-
         let interceptor = self.interceptor(target: target)
+        //session.upload
         let request = session.upload(multipartFormData: formData, with: request, interceptor: interceptor)
         setup(interceptor: interceptor, with: target, and: request)
 
@@ -194,6 +215,7 @@ private extension MoyaProvider {
 
     func sendUploadFile(_ target: Target, request: URLRequest, callbackQueue: DispatchQueue?, file: URL, progress: ProgressBlock? = nil, completion: @escaping Completion) -> CancellableToken {
         let interceptor = self.interceptor(target: target)
+        //session.upload
         let uploadRequest = session.upload(file, with: request, interceptor: interceptor)
         setup(interceptor: interceptor, with: target, and: uploadRequest)
 
@@ -204,6 +226,7 @@ private extension MoyaProvider {
 
     func sendDownloadRequest(_ target: Target, request: URLRequest, callbackQueue: DispatchQueue?, destination: @escaping DownloadDestination, progress: ProgressBlock? = nil, completion: @escaping Completion) -> CancellableToken {
         let interceptor = self.interceptor(target: target)
+        //session.download
         let downloadRequest = session.download(request, interceptor: interceptor, to: destination)
         setup(interceptor: interceptor, with: target, and: downloadRequest)
 
@@ -219,6 +242,7 @@ private extension MoyaProvider {
 
         let validationCodes = target.validationType.statusCodes
         let alamoRequest = validationCodes.isEmpty ? initialRequest : initialRequest.validate(statusCode: validationCodes)
+        //真正通过发起AlamofireRequest
         return sendAlamofireRequest(alamoRequest, target: target, callbackQueue: callbackQueue, progress: progress, completion: completion)
     }
 

@@ -1,6 +1,8 @@
 import Foundation
 
 /// Represents an HTTP task.
+//定义了HTTP TASK 的类型
+// 通过这个task可以定义HTTP 里的body 内容
 public enum Task {
 
     /// A request with no additional data.

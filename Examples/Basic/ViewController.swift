@@ -9,12 +9,13 @@ class ViewController: UITableViewController {
         super.viewDidLoad()
 
         progressView.frame = CGRect(origin: .zero, size: CGSize(width: 0, height: 2))
-        progressView.backgroundColor = .blue
-        navigationController?.navigationBar.addSubview(progressView)
+        progressView.backgroundColor = .blue//点语法；当知道要设置的。类型时。可以用点语法
+        navigationController?.navigationBar.addSubview(progressView)//导航给的是可选类型
 
         downloadRepositories("ashfurrow")
     }
 
+    //fileprivate 其修饰的属性或者方法只能在当前的Swift源文件里访问
     fileprivate func showAlert(_ title: String, message: String) {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)

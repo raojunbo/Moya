@@ -1,6 +1,10 @@
 import Foundation
 
 /// The protocol used to define the specifications necessary for a `MoyaProvider`.
+// 定义TargetType协议
+// 定义了baseUrl
+// 定义了path
+
 public protocol TargetType {
 
     /// The target's base `URL`.
